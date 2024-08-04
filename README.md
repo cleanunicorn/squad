@@ -1,0 +1,3 @@
+# Squad
+
+CLI tool.
