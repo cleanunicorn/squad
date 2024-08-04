@@ -35,6 +35,10 @@ def main(tasks, llm):
     elif str.lower(llm) == "openai":
         llm = openai.llm()
 
+    # TODO: make agent with search capabilities
+    from langchain_community.tools import DuckDuckGoSearchRun
+    search = DuckDuckGoSearchRun()
+
     # Agents
     agent_solver = Agent(
         role="Solver",
@@ -46,7 +50,7 @@ def main(tasks, llm):
         verbose=True,
         allow_delegation=False,
         llm=llm,
-        # tools=[search, CodeInterpreterTool()],
+        tools=[search],
     )
 
     # Tasks
