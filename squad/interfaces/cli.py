@@ -2,7 +2,8 @@ import click
 from dotenv import load_dotenv
 
 from crewai import Agent, Task, Crew, Process
-from crewai_tools import CodeInterpreterTool
+from crewai_tools import CodeInterpreterTool, WebsiteSearchTool, FileReadTool
+from langchain_community.tools import DuckDuckGoSearchRun
 import os
 
 import agents
@@ -24,20 +25,24 @@ os.environ["OTEL_SDK_DISABLED"] = "true"
     default=1,
 )
 @click.option("--llm", default="ollama", show_default=True, type=str)
-def main(tasks, llm):
+@click.option("--model", default="llama3.1", show_default=True, type=str)
+def main(tasks, llm, model):
     """
     Command line interface to set up and solve tasks
     """
 
     # Select LLM to use
     if str.lower(llm) == "ollama":
-        llm = ollama.llm()
+        llm = ollama.llm(model=model)
     elif str.lower(llm) == "openai":
-        llm = openai.llm()
+        if model == "llama3.1":
+            model = "gpt-4o-mini"
+        llm = openai.llm(model=model)
 
-    # TODO: make agent with search capabilities
-    from langchain_community.tools import DuckDuckGoSearchRun
-    search = DuckDuckGoSearchRun()
+    # Setup tools
+    search_tool = DuckDuckGoSearchRun()
+    website_rag_tool = WebsiteSearchTool()
+    file_read_tool = FileReadTool()
 
     # Agents
     agent_solver = Agent(
@@ -50,7 +55,7 @@ def main(tasks, llm):
         verbose=True,
         allow_delegation=False,
         llm=llm,
-        tools=[search],
+        tools=[search_tool, website_rag_tool, file_read_tool],
     )
 
     # Tasks
